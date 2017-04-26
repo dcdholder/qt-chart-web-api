@@ -16,13 +16,13 @@ from flask_cors import CORS
 
 qtChartWebApp = Flask(__name__)
 
-with open("mysql.yaml") as stream:
+with open(os.path.abspath(os.path.dirname(os.path.realpath(__file__))) + "/mysql.yaml") as stream:
     try:
         mySqlConfig = yaml.load(stream)
     except yaml.YAMLError as e:
         raise ValueError("Could not open MySQL config.")
 
-qtChartWebApp.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://' + mySqlConfig['username'] + ':' + mySqlConfig['password'] + '@' + mySqlConfig['host'] + '/' + mySqlConfig['name']
+qtChartWebApp.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://' + mySqlConfig['username'] + ':' + mySqlConfig['password'] + '@' + mySqlConfig['host'] + '/' + mySqlConfig['name']
 qtChartWebApp.config['SQLALCHEMY_POOL_RECYCLE'] = 299
 #qtChartWebApp.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.abspath(os.path.dirname(os.path.realpath(__file__))) + '/charts.db'
 db = SQLAlchemy(qtChartWebApp)
