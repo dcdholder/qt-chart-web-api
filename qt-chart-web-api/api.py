@@ -52,8 +52,18 @@ class UserResource(Resource):
                     return 'User \'' + requestJson["username"] + '\' does not exist.', 404
             else:
                 return 'Missing username.', 400
+
+        elif action=="username":
+            if "sessionId" in requestJson.keys():
+                if UserSessions.sessionExists(requestJson["sessionId"]):
+                    username = UserSessions.usernameFromSessionId(requestJson["sessionId"])
+                    return username, 200
+                else:
+                    return 'Session ID is either invalid, or has expired.', 403
+            else:
+                return 'Missing session ID field.', 400
         else:
-            return 'Invalid get request action.', 400
+            return 'Invalid get request action \'' + action + '\'.', 400
 
     def post(self, action):
         requestJson = request.get_json()
@@ -101,7 +111,7 @@ class UserResource(Resource):
                 else:
                     return 'Session ID is either invalid, or has expired.', 403
             else:
-                return 'Missing session id or user data fields.', 400
+                return 'Missing session ID or user data fields.', 400
 
         elif action=="changepassword":
             if ("username" in requestJson.keys()) and ("oldPassword" in requestJson.keys()) and ("newPassword" in requestJson.keys()):
@@ -117,7 +127,7 @@ class UserResource(Resource):
                 return 'Missing username, old password, or new password data fields.', 400
 
         else:
-            return 'Invalid post request action.', 400
+            return 'Invalid post request action \'' + action + '\'.', 400
 
     def delete(self, action):
         requestJson = request.get_json()
@@ -131,6 +141,8 @@ class UserResource(Resource):
                     return 'Logged user \'' + username + '\' out successfully.', 204
                 else:
                     return 'No session to log out from.', 204
+            else:
+                return 'Missing session ID field.', 400
 
         elif action=="delete": #delete user
             if ("username" in requestJson.keys()) and ("password" in requestJson.keys()):
@@ -146,7 +158,7 @@ class UserResource(Resource):
                 return 'Missing username or password field.', 400
 
         else:
-            return 'Invalid delete request action.', 400
+            return 'Invalid delete request action \'' + action + '\'.', 400
 
 class Format(db.Model):
     version     = db.Column(db.String(100), primary_key=True)
