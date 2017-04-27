@@ -29,7 +29,7 @@ db = SQLAlchemy(qtChartWebApp)
 CORS(qtChartWebApp)
 
 class FormatResource(Resource):
-    def get(self,versionId):
+    def post(self,versionId):
         requestJson = request.get_json()
 
         if versionId in Format.allVersions():
@@ -40,31 +40,6 @@ class FormatResource(Resource):
 #initially we support basic CRUD with 'login' and 'logout'
 #login and logout are 'post' and 'delete' requests, respectively
 class UserResource(Resource):
-    def get(self, action):
-        requestJson = request.get_json()
-
-        if action=="read":
-            if "username" in requestJson.keys():
-                if UserCredentials.usernameExists(requestJson["username"]):
-                    userData = UserData.get(requestJson["username"])
-                    return userData, 200
-                else:
-                    return 'User \'' + requestJson["username"] + '\' does not exist.', 404
-            else:
-                return 'Missing username.', 400
-
-        elif action=="username":
-            if "sessionId" in requestJson.keys():
-                if UserSessions.sessionExists(requestJson["sessionId"]):
-                    username = UserSessions.usernameFromSessionId(requestJson["sessionId"])
-                    return username, 200
-                else:
-                    return 'Session ID is either invalid, or has expired.', 403
-            else:
-                return 'Missing session ID field.', 400
-        else:
-            return 'Invalid get request action \'' + action + '\'.', 400
-
     def post(self, action):
         requestJson = request.get_json()
 
@@ -125,6 +100,26 @@ class UserResource(Resource):
                     return 'Invalid username or old password.', 403
             else:
                 return 'Missing username, old password, or new password data fields.', 400
+
+        elif action=="read":
+            if "username" in requestJson.keys():
+                if UserCredentials.usernameExists(requestJson["username"]):
+                    userData = UserData.get(requestJson["username"])
+                    return userData, 200
+                else:
+                    return 'User \'' + requestJson["username"] + '\' does not exist.', 404
+            else:
+                return 'Missing username.', 400
+
+        elif action=="username":
+            if "sessionId" in requestJson.keys():
+                if UserSessions.sessionExists(requestJson["sessionId"]):
+                    username = UserSessions.usernameFromSessionId(requestJson["sessionId"])
+                    return username, 200
+                else:
+                    return 'Session ID is either invalid, or has expired.', 403
+            else:
+                return 'Missing session ID field.', 400
 
         else:
             return 'Invalid post request action \'' + action + '\'.', 400
