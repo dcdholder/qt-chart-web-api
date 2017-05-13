@@ -210,6 +210,15 @@ class UserCredentials(db.Model):
         return extantUserCredentials!=None
 
     @staticmethod
+    def similarUsernameExists(username):
+        allUsers = UserCredentials.query.all()
+        for user in allUsers:
+            if user.username.lower() == username.lower():
+                return True
+
+        return False
+
+    @staticmethod
     def loginCredentialsExist(username,password):
         if UserCredentials.query.filter_by(username=username).count()!=0:
             extantUserCredentials = UserCredentials.query.filter_by(username=username).first()
@@ -223,7 +232,10 @@ class UserCredentials(db.Model):
     def usernameFormatValid(username):
         if len(username) >= UserCredentials.MIN_USERNAME_LENGTH and len(username) <= UserCredentials.MAX_USERNAME_LENGTH:
             if re.match('^[a-zA-Z0-9_]+$',username):
-                return True
+                if not UserCredentials.similarUsernameExists(username):
+                    return True
+                else:
+                    return 'A user with that name already exists.'
             else:
                 return 'Username must contain only alphanumeric characters and underscores.'
         else:
