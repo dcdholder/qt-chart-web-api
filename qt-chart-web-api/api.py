@@ -207,7 +207,13 @@ class UserCredentials(db.Model):
     def usernameExists(username):
         extantUserCredentials = UserCredentials.query.filter_by(username=username).first()
 
-        return extantUserCredentials!=None
+        #check required due to case-insensitivity of some dbs
+        if extantUserCredentials==None:
+            return False
+        elif extantUserCredentials.username==username:
+            return True
+        else:
+            return False
 
     @staticmethod
     def similarUsernameExists(username):
@@ -223,7 +229,7 @@ class UserCredentials(db.Model):
         if UserCredentials.query.filter_by(username=username).count()!=0:
             extantUserCredentials = UserCredentials.query.filter_by(username=username).first()
 
-            return UserCredentials.getPasswordHash(password,extantUserCredentials.passwordSalt)==extantUserCredentials.passwordHash
+            return UserCredentials.getPasswordHash(password,extantUserCredentials.passwordSalt)==extantUserCredentials.passwordHash and extantUserCredentials.username==username
         else:
             return False
 
