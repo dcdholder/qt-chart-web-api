@@ -7,6 +7,7 @@ import random
 import hashlib
 import binascii
 import yaml
+import re
 from datetime import datetime, timedelta
 
 from flask import Flask, request, send_file
@@ -56,7 +57,7 @@ class UserResource(Resource):
         elif action=="create": #create a new user with the specified form data
             if ("username" in requestJson.keys()) and ("password" in requestJson.keys()) and ("userData" in requestJson.keys()):
                 if not UserCredentials.usernameExists(requestJson["username"]):
-                    if UserCredentials.usernameFormatValid(requestJson["username"]) and UserCredentials.passwordFormatValid(requestJson["password"]):
+                    if UserCredentials.usernameFormatValid(requestJson["username"])==True and UserCredentials.passwordFormatValid(requestJson["password"])==True:
                         if UserData.isValid(requestJson["userData"]):
                             UserCredentials.new(requestJson["username"],requestJson["password"])
                             UserData.new(requestJson["username"],requestJson["userData"])
@@ -65,8 +66,10 @@ class UserResource(Resource):
                             return sessionCredentials, 201
                         else:
                             return 'User data format is invalid.', 403
-                    else:
-                        return 'Invalid username or password format.', 403
+                    elif UserCredentials.usernameFormatValid(requestJson["username"])!=True:
+                        return UserCredentials.usernameFormatValid(requestJson["username"]), 403
+                    elif UserCredentials.passwordFormatValid(requestJson["password"])!=True:
+                        return UserCredentials.passwordFormatValid(requestJson["password"]), 403
                 else:
                     return 'User \'' + requestJson["username"] + '\' already exists.', 403
             else:
@@ -173,7 +176,7 @@ class UserCredentials(db.Model):
     MIN_USERNAME_LENGTH = 6
     MIN_PASSWORD_LENGTH = 6
 
-    MAX_USERNAME_LENGTH = 100
+    MAX_USERNAME_LENGTH = 20
     MAX_PASSWORD_LENGTH = 100
 
     PASSWORD_SALT_SIZE = 32
@@ -218,11 +221,20 @@ class UserCredentials(db.Model):
     #TODO: needs more rigorous checking
     @staticmethod
     def usernameFormatValid(username):
-        return len(username) >= UserCredentials.MIN_USERNAME_LENGTH and len(username) <= UserCredentials.MAX_USERNAME_LENGTH
+        if len(username) >= UserCredentials.MIN_USERNAME_LENGTH and len(username) <= UserCredentials.MAX_USERNAME_LENGTH:
+            if re.match('^[a-zA-Z0-9_]+$',username):
+                return True
+            else:
+                return 'Username must contain only alphanumeric characters and underscores.'
+        else:
+            return 'Username must be between ' + str(UserCredentials.MIN_USERNAME_LENGTH) + ' and ' + str(UserCredentials.MAX_USERNAME_LENGTH) + ' characters long.'
 
     @staticmethod
     def passwordFormatValid(password):
-        return len(password) >= UserCredentials.MIN_PASSWORD_LENGTH and len(password) <= UserCredentials.MAX_PASSWORD_LENGTH
+        if len(password) >= UserCredentials.MIN_PASSWORD_LENGTH and len(password) <= UserCredentials.MAX_PASSWORD_LENGTH:
+            return True
+        else:
+            return 'Password must be between ' + str(UserCredentials.MIN_PASSWORD_LENGTH) + ' and ' + str(UserCredentials.MAX_PASSWORD_LENGTH) + ' characters long.'
 
     @staticmethod
     def getPasswordHash(password,passwordSalt):
